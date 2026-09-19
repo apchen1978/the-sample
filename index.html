@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Sample — one object, changing names</title>
+<style>
+  :root {
+    --paper: #f5f4f1;
+    --panel: #ffffff;
+    --ink: #23282b;
+    --slate: #5b6b73;
+    --steel: #4a6b8a;
+    --line: #dcdcd6;
+    --clay: #c8bdb0;
+    --stop: #a8452f;
+    --free: #3f6b4f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 700px; margin: 0 auto; padding: 46px 20px 70px; }
+
+  .kicker { font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--steel); margin: 0 0 10px; }
+  h1 { font-family: ui-serif, Georgia, "Times New Roman", serif; font-size: clamp(32px, 6.5vw, 48px); line-height: 1.04; letter-spacing: -0.02em; margin: 0 0 12px; font-weight: 700; }
+  .spark { font-family: ui-serif, Georgia, serif; font-size: clamp(16px, 3vw, 19px); font-style: italic; color: var(--slate); max-width: 32em; margin: 0 0 14px; }
+  .badge {
+    display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .11em; text-transform: uppercase;
+    color: var(--slate); border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; margin: 0 0 26px;
+  }
+
+  /* ---- bench (the object rests here and never moves) ---- */
+  .bench {
+    position: relative; display: flex; flex-direction: column; align-items: center;
+    background: linear-gradient(180deg, #ffffff 0%, #f1f0ec 62%, #e8e6e0 100%);
+    border: 1px solid var(--line); border-radius: 16px; padding: 28px 22px 20px;
+    box-shadow: 0 1px 0 rgba(255,255,255,.9) inset;
+  }
+  .unchanged {
+    position: absolute; top: 12px; right: 14px;
+    font-size: 9.5px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase;
+    color: var(--slate); border: 1px solid var(--line); border-radius: 999px; padding: 3px 9px; background: var(--panel);
+  }
+  .chip-wrap { position: relative; padding-bottom: 10px; }
+  .chip {
+    width: 104px; height: 104px; border-radius: 14px;
+    background:
+      radial-gradient(circle at 22% 28%, rgba(255,255,255,.55) 0 2px, transparent 3px),
+      radial-gradient(circle at 68% 62%, rgba(35,40,43,.10) 0 2px, transparent 3px),
+      radial-gradient(circle at 44% 78%, rgba(35,40,43,.07) 0 3px, transparent 4px),
+      radial-gradient(circle at 80% 22%, rgba(35,40,43,.06) 0 2px, transparent 3px),
+      linear-gradient(150deg, #d8cec2, var(--clay));
+    box-shadow: 0 16px 30px -18px rgba(35,40,43,.55), inset 0 0 0 1px rgba(255,255,255,.35);
+  }
+  .chip-wrap::after {
+    content: ""; position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
+    width: 118px; height: 12px; border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgba(35,40,43,.20), transparent 70%);
+  }
+  .chip-note { margin-top: 8px; font-size: 11px; color: var(--slate); letter-spacing: .05em; }
+
+  .hands { display: flex; flex-wrap: wrap; gap: 4px 10px; justify-content: center; margin: 20px 0 0; max-width: 420px; }
+  .hands span {
+    font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #b3b3ab;
+    border-bottom: 2px solid transparent; padding: 2px 2px 3px; transition: color .2s ease, border-color .2s ease;
+  }
+  .hands span.done { color: var(--slate); }
+  .hands span.now { color: var(--ink); border-color: var(--steel); font-weight: 700; }
+
+  /* ---- the specimen tag ---- */
+  .tag {
+    margin-top: 24px; border: 1px solid var(--line); border-left: 3px solid var(--steel);
+    background: var(--panel); border-radius: 4px; padding: 14px 18px;
+  }
+  .tag .held { font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--steel); }
+  .tag h2 {
+    font-family: ui-serif, Georgia, serif; font-size: clamp(25px, 5.4vw, 36px);
+    margin: 5px 0 5px; font-weight: 700; letter-spacing: -0.01em; color: var(--ink);
+  }
+  .tag .job { font-size: 14.5px; color: var(--slate); margin: 0; }
+
+  /* ---- accumulating latitude ---- */
+  .rules { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .rules .title { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--slate); margin: 0 0 10px; }
+  .rules ul { list-style: none; margin: 0; padding: 0; }
+  .rules li {
+    font-size: 14px; padding: 6px 0 6px 20px; position: relative; color: var(--stop); font-weight: 600;
+    animation: slide .3s ease both;
+  }
+  .rules li.free { color: var(--free); }
+  .rules li::before { content: "—"; position: absolute; left: 0; color: #b9b9b1; }
+  @keyframes slide { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .btn {
+    font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 20px;
+    background: var(--ink); color: var(--paper); border: 0; border-radius: 10px; padding: 12px 20px;
+    transition: background .15s ease;
+  }
+  .btn:hover { background: #384042; }
+  .btn:focus-visible { outline: 2px solid var(--steel); outline-offset: 2px; }
+
+  .reveal { margin-top: 26px; opacity: 0; transform: translateY(8px); transition: opacity .5s ease, transform .5s ease; }
+  .reveal.show { opacity: 1; transform: translateY(0); }
+  .reveal .line { font-family: ui-serif, Georgia, serif; font-size: clamp(21px, 4.4vw, 28px); font-weight: 700; margin: 0 0 10px; }
+  .reveal .sub { font-size: 14.5px; color: var(--slate); margin: 0; }
+
+  .foot { margin-top: 34px; font-size: 11.5px; color: #8e8e86; border-top: 1px solid var(--line); padding-top: 14px; }
+
+  @media (max-width: 520px) {
+    .hands span { font-size: 9px; }
+    .chip { width: 88px; height: 88px; }
+    .chip-wrap::after { width: 100px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kicker">one object · changing names</p>
+  <h1>The Sample</h1>
+  <p class="spark">Everyone calls it a sample. Pass it on and watch that word stop being enough.</p>
+  <span class="badge">Illustrative sequence · not a standard industry process</span>
+
+  <div class="bench">
+    <span class="unchanged" id="unchanged">object unchanged</span>
+    <div class="chip-wrap">
+      <!-- Deliberately never touched by script: the object must stay identical. -->
+      <div class="chip" id="chip"></div>
+    </div>
+    <p class="chip-note">one physical object</p>
+    <div class="hands" id="hands"></div>
+  </div>
+
+  <div class="tag">
+    <p class="held" id="handLabel">Held by · Factory</p>
+    <h2 id="name">counter sample</h2>
+    <p class="job" id="job">a question we are asking you</p>
+  </div>
+
+  <div class="rules">
+    <p class="title">Remaining latitude — illustrative</p>
+    <ul id="ruleList"></ul>
+  </div>
+
+  <button class="btn" id="btn">Pass it on →</button>
+
+  <div class="reveal" id="reveal">
+    <p class="line">The object didn't change. What people were allowed to do with it did.</p>
+    <p class="sub">Same object. New name. Less room to move. Whether a name merely reflects a decision, announces one, or quietly creates one — this experiment does not claim to know.</p>
+  </div>
+
+  <p class="foot">A synthetic thought experiment drawn from experience-grounded commercial and manufacturing context.
+  The terminology resembles words used in real trade and production, but the sequence, the names and the latitude changes here are
+  <strong>constructed for this exercise</strong> — not a standard industry process, not a rule, and not a claim about any real company,
+  buyer, supplier, factory, or project. Approval in one domain does not automatically imply approval in another.</p>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const HANDS = ["Factory","Sales","Buyer","Design","Approval","QA","Production"];
+
+  // Illustrative only: the sequence and the wording of each line are constructed.
+  const steps = [
+    { hand: "Factory",     name: "counter sample",  job: "a question we are asking you",
+      rule: "may change anything", free: true },
+    { hand: "Salesperson", name: "sales sample",    job: "the picture I leave behind",
+      rule: "may no longer promise it" },
+    { hand: "Buyer",       name: "reference",       job: "what I compare everything to",
+      rule: "may no longer substitute it" },
+    { hand: "Designer",    name: "target",          job: "what I now design toward",
+      rule: "may no longer simplify it" },
+    { hand: "Approval",    name: "approved sample", job: "a yes, in physical form",
+      rule: "may no longer improve it" },
+    { hand: "QA",          name: "standard",        job: "the thing everything is measured against",
+      rule: "may no longer touch it" },
+    { hand: "Production",  name: "golden sample",   job: "reproduce this exactly",
+      rule: "may no longer lose it" },
+  ];
+
+  let i = 0;
+
+  const handsEl = $("hands");
+  HANDS.forEach(h => {
+    const s = document.createElement("span");
+    s.textContent = h;
+    handsEl.appendChild(s);
+  });
+
+  function paintHands() {
+    [...handsEl.children].forEach((el, idx) => {
+      el.classList.toggle("now", idx === i);
+      el.classList.toggle("done", idx < i);
+    });
+  }
+
+  function show() {
+    const s = steps[i];
+    $("handLabel").textContent = "Held by · " + s.hand;
+    $("name").textContent = s.name;
+    $("job").textContent = s.job;
+
+    const li = document.createElement("li");
+    li.textContent = s.rule;
+    if (s.free) li.classList.add("free");
+    $("ruleList").appendChild(li);
+
+    paintHands();
+
+    if (i === steps.length - 1) {
+      $("btn").style.display = "none";
+      $("reveal").classList.add("show");
+    }
+  }
+
+  $("btn").addEventListener("click", () => {
+    if (i >= steps.length - 1) return;
+    i += 1;
+    show();
+  });
+
+  show();
+</script>
+</body>
+</html>
